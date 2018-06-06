@@ -4,7 +4,6 @@ from django.db import models
 import datetime
 from django.utils import timezone
 
-
 # Create your models here.
 class Question(models.Model):
     """
@@ -29,7 +28,7 @@ class Choice(models.Model):
     ForeignKeyによるリレーションの設定
     """
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    choice_text = models.CharField(max_length=200)
+    choice_text = models.CharField(max_length=300)
     votes = models.IntegerField(default=0)
     
     #オブジェクトを参照した時の表記を指定
