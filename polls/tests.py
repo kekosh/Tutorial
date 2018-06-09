@@ -26,3 +26,74 @@ class QuestionModelTests(TestCase):
 def create_question(question_text, days):
     time = timezone.now() + datetime.timedelta(days=days)
     return Question.objects.create(question_text=question_text, pub_date=time)
+
+class QuestionIndexViewTests(TestCase):
+    def test_no_questions(self):
+        """
+        データが1件もない場合の表示を確認する
+        """
+        response = self.client.get(reverse('polls:index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No polls are available.")
+        self.assertQuerysetEqual(response.context['latest_question_list'],[])
+    
+    def test_past_question(self):
+        """
+        indexページに過去日付のデータが表示されることを確認する
+        """
+        create_question(question_text="Past question.", days=-30)
+        response = self.client.get(reverse("polls:index"))
+        self.assertQuerysetEqual(response.context['latest_question_list'],
+            ['<Question: Past question.>']
+        )
+        
+    def test_future_question(self):
+        """
+        indexページに未来日付のデータが表示されないことを確認する
+        """
+        create_question(question_text='Future question.', days=30)
+        response = self.client.get(reverse("polls:index"))
+        self.assertContains(response, "No polls are available.")
+        self.assertQuerysetEqual(response.context['latest_question_list'], [])
+        
+    def test_future_question_and_past_question(self):
+        """
+        過去日付と未来日付両方のデータが存在する場合に、過去日付のデータのみ
+        表示されることを確認する
+        """
+        create_question(question_text="Past question.", days=-30)
+        create_question(question_text="Future question.", days=30)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(response.context['latest_question_list'],
+            ['<Question: Past question.>']
+        )
+    
+    def test_two_past_questions(self):
+        """
+        複数データが表示されることを確認する
+        """
+        create_question(question_text="Past question_1.", days=-30)
+        create_question(question_text="Past question_2.", days=-5)
+        response = self.client.get(reverse("polls:index"))
+        self.assertQuerysetEqual(response.context['latest_question_list'],
+        ['<Question: Past question_1.>','<Question: Past question_2.>']
+        )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
