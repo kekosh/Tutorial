@@ -24,6 +24,9 @@ class QuestionModelTests(TestCase):
         self.assertIs(recent_question.was_published_recently(), True)
 
 def create_question(question_text, days):
+    """
+    テスト用データを作成するショートカット関数
+    """
     time = timezone.now() + datetime.timedelta(days=days)
     return Question.objects.create(question_text=question_text, pub_date=time)
 
@@ -80,14 +83,26 @@ class QuestionIndexViewTests(TestCase):
         )
 
 
-
-
-
-
-
-
-
-
+class QuestionDetailViewTest(TestCase):
+    def test_future_question(self):
+        """
+        公開日が未来日のデータを表示しようとした場合に404エラーになる
+        ことを確認する
+        """
+        future_question = create_question(question_text='Future question.',days=5)
+        url = reverse('polls:detail', args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+        
+    def test_past_question(self):
+        """
+        公開日が到来しているデータが表示されることを確認する
+        """
+        past_question = create_question(question_text='Past question.',days=-5)
+        url = reverse('polls:detail', args=(past_question.id,))
+        response = self.client.get(url)
+        self.assertContains(response, past_question.question_text)
+        
 
 
 
